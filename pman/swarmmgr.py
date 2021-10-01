@@ -4,7 +4,6 @@ jobs (short-lived services) as well as manage their state in the cluster.
 """
 
 import docker
-import podman
 from .abstractmgr import AbstractManager, ManagerException
 
 
@@ -29,31 +28,54 @@ class SwarmManager(AbstractManager):
         mounts = []
         if mountdir is not None:
             mounts.append('%s:/share:rw' % mountdir)
-        try:
-            job = self.docker_client.services.create(image, command,
-                                                     name=name,
-                                                     mounts=mounts,
-                                                     restart_policy=restart_policy,
-                                                     tty=True)
-        except docker.errors.APIError as e:
-            status_code = 503 if e.response.status_code == 500 else e.response.status_code
-            raise ManagerException(str(e), status_code=status_code)
+        if self.config.get('CONTAINER_ENV') == 'podman':
+            try:
+                job = self.podman_client.container.create(image, command,
+                                                         name=name,
+                                                         mounts=mounts,
+                                                         restart_policy=restart_policy,
+                                                         terminal=True)
+            except Exception as e:
+                status_code = 503 if e.response.status_code == 500 else e.response.status_code
+                raise ManagerException(str(e), status_code=status_code)
+        else:
+            try:
+                job = self.docker_client.services.create(image, command,
+                                                         name=name,
+                                                         mounts=mounts,
+                                                         restart_policy=restart_policy,
+                                                         tty=True)
+            except docker.errors.APIError as e:
+                status_code = 503 if e.response.status_code == 500 else e.response.status_code
+                raise ManagerException(str(e), status_code=status_code)
         return job
 
     def get_job(self, name):
         """
         Get a previously scheduled job object.
         """
-        try:
-            job = self.docker_client.services.get(name)
-        except docker.errors.NotFound as e:
-            raise ManagerException(str(e), status_code=404)
-        except docker.errors.APIError as e:
-            status_code = 503 if e.response.status_code == 500 else e.response.status_code
-            raise ManagerException(str(e), status_code=status_code)
-        except docker.errors.InvalidVersion as e:
-            raise ManagerException(str(e), status_code=400)
-        return job
+        if self.config.get('CONTAINER_ENV') == 'podman':
+            try:
+                job = self.podman_client.containers.get(name)
+            except podman.errors.NotFound as e:
+                raise ManagerException(str(e), status_code=404)
+            except podman.errors.APIError as e:
+                status_code = 503 if e.response.status_code == 500 else e.response.status_code
+                raise ManagerException(str(e), status_code=status_code)
+            except Exception as e:
+                raise ManagerException(str(e), status_code=400)
+            return job
+        else:
+            try:
+                job = self.docker_client.services.get(name)
+            except docker.errors.NotFound as e:
+                raise ManagerException(str(e), status_code=404)
+            except docker.errors.APIError as e:
+                status_code = 503 if e.response.status_code == 500 else e.response.status_code
+                raise ManagerException(str(e), status_code=status_code)
+            except docker.errors.InvalidVersion as e:
+                raise ManagerException(str(e), status_code=400)
+            return job
 
     def get_job_logs(self, job):
         """
