@@ -12,6 +12,10 @@
 # PyCharm
 .idea
 
+# Eclipse/PyDev
+.project
+.pydevproject
+
 # Setuptools distribution folder.
 /dist/
 

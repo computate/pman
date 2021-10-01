@@ -4,6 +4,7 @@ jobs (short-lived services) as well as manage their state in the cluster.
 """
 
 import docker
+import podman
 from .abstractmgr import AbstractManager, ManagerException
 
 
@@ -15,7 +16,10 @@ class SwarmManager(AbstractManager):
         if self.config is None:
             self.docker_client = docker.from_env()
         else:
-            self.docker_client = docker.from_env(environment=self.config)
+            if self.config.get('CONTAINER_ENV') == 'podman':
+                self.podman_client = podman.PodmanClient(base_url='tcp://192.168.1.7:5000')
+            else:
+                self.docker_client = docker.from_env(environment=self.config)
 
     def schedule_job(self, image, command, name, resources_dict, mountdir=None):
         """

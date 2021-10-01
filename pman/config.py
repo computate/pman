@@ -35,6 +35,17 @@ class Config:
             if docker_cert_path:
                 self.DOCKER_CERT_PATH = docker_cert_path
 
+        if self.CONTAINER_ENV == 'podman':
+            docker_host = env('DOCKER_HOST', '')
+            if docker_host:
+                self.DOCKER_HOST = docker_host
+            docker_tls_verify = env.int('DOCKER_TLS_VERIFY', None)
+            if docker_tls_verify is not None:
+                self.DOCKER_TLS_VERIFY = docker_tls_verify
+            docker_cert_path = env('DOCKER_CERT_PATH', '')
+            if docker_cert_path:
+                self.DOCKER_CERT_PATH = docker_cert_path
+
         if self.CONTAINER_ENV == 'kubernetes':
             self.JOB_NAMESPACE = env('JOB_NAMESPACE', 'default')
 
