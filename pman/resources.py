@@ -10,6 +10,7 @@ from .abstractmgr import ManagerException
 from .openshiftmgr import OpenShiftManager
 from .kubernetesmgr import KubernetesManager
 from .swarmmgr import SwarmManager
+from .podmanmgr import PodmanManager
 
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,8 @@ def get_compute_mgr(container_env):
         compute_mgr = KubernetesManager(app.config)
     elif container_env == 'openshift':
         compute_mgr = OpenShiftManager()
+    elif container_env == 'podman':
+        compute_mgr = PodmanManager(app.config)
     return compute_mgr
 
 
@@ -62,6 +65,9 @@ class JobListResource(Resource):
         }
 
     def post(self):
+        logger.info('George')
+        print('Sam')
+
         args = parser.parse_args()
         job_id = args.jid.lstrip('/')
 

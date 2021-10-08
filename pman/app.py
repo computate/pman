@@ -1,5 +1,6 @@
 
 import os
+import logging
 
 from flask import Flask
 from flask_restful import Api
@@ -24,5 +25,10 @@ def create_app(config_dict=None):
     # url mappings
     api.add_resource(JobListResource, '/', endpoint='api.joblist')
     api.add_resource(JobResource, '/<string:job_id>/', endpoint='api.job')
+
+    # logging
+    gunicorn_error_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers.extend(gunicorn_error_logger.handlers)
+    app.logger.setLevel(logging.DEBUG)
 
     return app

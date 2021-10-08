@@ -3,6 +3,8 @@ Swarm cluster manager module that provides functionality to schedule
 jobs (short-lived services) as well as manage their state in the cluster.
 """
 
+import logging
+import podman
 import docker
 from .abstractmgr import AbstractManager, ManagerException
 
@@ -16,7 +18,7 @@ class SwarmManager(AbstractManager):
             self.docker_client = docker.from_env()
         else:
             if self.config.get('CONTAINER_ENV') == 'podman':
-                self.podman_client = podman.PodmanClient(base_url='tcp://192.168.1.7:5000')
+                self.podman_client = podman.PodmanClient(base_url='tcp://192.168.1.2:5000')
             else:
                 self.docker_client = docker.from_env(environment=self.config)
 
@@ -30,7 +32,8 @@ class SwarmManager(AbstractManager):
             mounts.append('%s:/share:rw' % mountdir)
         if self.config.get('CONTAINER_ENV') == 'podman':
             try:
-                job = self.podman_client.container.create(image, command,
+                logging.info(' create container image:%s, command:%s, name:%s, mounts:%s, restart_policy:%s' % (image, command, name, mounts, restart_policy))
+                job = self.podman_client.containers.create(image, command,
                                                          name=name,
                                                          mounts=mounts,
                                                          restart_policy=restart_policy,

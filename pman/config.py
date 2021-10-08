@@ -1,4 +1,5 @@
 
+import os
 from logging.config import dictConfig
 from environs import Env
 
@@ -16,7 +17,7 @@ class Config:
         env = Env()
         env.read_env()  # also read .env file, if it exists
 
-        self.CONTAINER_ENV = env('CONTAINER_ENV', 'swarm')
+        self.CONTAINER_ENV = env('CONTAINER_ENV', os.getenv('CONTAINER_ENV', 'swarm'))
         self.STORAGE_TYPE = env('STORAGE_TYPE', 'host')
 
         if self.STORAGE_TYPE == 'host' or self.STORAGE_TYPE == 'nfs':
