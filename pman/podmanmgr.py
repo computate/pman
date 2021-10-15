@@ -62,7 +62,7 @@ class PodmanManager(AbstractManager):
             status = 'undefined'
             state = task['State']['Status']
             if state in ('new', 'pending', 'assigned', 'accepted', 'preparing',
-                         'starting'):
+                         'starting', 'configured'):
                 status = 'notstarted'
             elif state == 'running':
                 status = 'started'
@@ -70,12 +70,13 @@ class PodmanManager(AbstractManager):
                 status = 'finishedWithError'
             elif state == 'complete':
                 status = 'finishedSuccessfully'
+            logging.info('pman status: %s' % state)
 
             info['name'] = job.name
-            info['image'] = task['Spec']['ContainerSpec']['Image']
-            info['cmd'] = ' '.join(task['Spec']['ContainerSpec']['Command'])
-            info['timestamp'] = task['Status']['Timestamp']
-            info['message'] = task['Status']['Message']
+            info['image'] = task['Config']['Image']
+            info['cmd'] = ' '.join(task['Config']['Cmd'])
+            info['timestamp'] = task['Created']
+            info['message'] = task['State']['Error']
             info['status'] = status
         return info
 
